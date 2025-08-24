@@ -1,6 +1,8 @@
-// src/hooks/products/useProductForm.ts
-import { useState, useCallback, useMemo } from "react";
 import { z } from "zod";
+import toast from "react-hot-toast";
+import { useNavigate } from "react-router-dom";
+import { useState, useCallback, useMemo } from "react";
+
 import {
   ProductFormSchema,
   ImageUploadSchema,
@@ -31,6 +33,7 @@ interface ImageState {
 
 export const useProductForm = (options: UseProductFormOptions = {}) => {
   const { user } = useAuth();
+  const navigate = useNavigate();
 
   const { initialData, productId, onSuccess, onError } = options;
   const isEditing = Boolean(productId);
@@ -40,8 +43,11 @@ export const useProductForm = (options: UseProductFormOptions = {}) => {
     onSuccess: (product) => {
       setIsDirty(false);
       onSuccess?.(product);
+      toast.success("Product created successfully!");
+      navigate("/products/manage");
     },
     onError: (error) => {
+      toast.error(error.message || "Failed to create product.");
       onError?.(error);
     },
   });
@@ -99,21 +105,24 @@ export const useProductForm = (options: UseProductFormOptions = {}) => {
   const [isDirty, setIsDirty] = useState(false);
 
   // Validate a single field
-  const validateField = useCallback((name: keyof ProductFormInput, value: any) => {
-    try {
-      const schema =
-        ProductFormSchema.shape[name as keyof typeof ProductFormSchema.shape];
-      if (schema) {
-        schema.parse(value);
-        return undefined;
+  const validateField = useCallback(
+    (name: keyof ProductFormInput, value: any) => {
+      try {
+        const schema =
+          ProductFormSchema.shape[name as keyof typeof ProductFormSchema.shape];
+        if (schema) {
+          schema.parse(value);
+          return undefined;
+        }
+      } catch (error) {
+        if (error instanceof z.ZodError) {
+          return error.issues[0]?.message;
+        }
       }
-    } catch (error) {
-      if (error instanceof z.ZodError) {
-        return error.issues[0]?.message;
-      }
-    }
-    return undefined;
-  }, []);
+      return undefined;
+    },
+    []
+  );
 
   // Validate entire form
   const validateForm = useCallback(() => {

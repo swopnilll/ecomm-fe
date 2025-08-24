@@ -1,25 +1,43 @@
 import { useState } from "react";
+import toast from "react-hot-toast";
+
+import type { Product, ProductsResponse } from "../../types/product";
+import { useCart } from "../../hooks/cart/useCart";
 import { usePublishedProducts } from "../../hooks/products/useProducts";
-import type { Product } from "../../types/product";
 
 export default function ProductGrid() {
-  const { data: publishedProducts, isLoading, error } = usePublishedProducts();
-
   const [showOnlyInStock, setShowOnlyInStock] = useState<boolean>(false);
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const productsPerPage = 10; // Corresponds to the backend limit
 
-  // Transform API data to match the component's needs
-  const products: Product[] = Array.isArray(publishedProducts)
-    ? publishedProducts
-    : publishedProducts?.products || [];
+  const { data, isLoading, error } = usePublishedProducts({
+    page: currentPage,
+    limit: productsPerPage,
+  });
 
-  const filteredProducts = products.filter((product) => {
+  console.log({data})
+
+  const { addItem } = useCart();
+
+  // Use optional chaining with a default value to prevent errors
+  const products: Product[] = data?.data || [];
+
+  const totalPages: number = data?.pagination.totalPages || 1;
+  const totalProducts: number = data?.pagination.total || 0;
+
+  const filteredProducts: Product[] = products.filter((product: Product) => {
     const stockMatch = !showOnlyInStock || product.stockAmount > 0;
     return stockMatch && !product.isDeleted && product.status === "published";
   });
 
-  const formatPrice = (price: number, taxRate: number) => {
+  const formatPrice = (price: number, taxRate: number): string => {
     const priceWithTax = price + (price * taxRate) / 100;
     return `$${priceWithTax.toFixed(2)}`;
+  };
+
+  const paginate = (pageNumber: number): void => {
+    setCurrentPage(pageNumber);
+    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   if (isLoading) {
@@ -72,7 +90,10 @@ export default function ProductGrid() {
             <input
               type="checkbox"
               checked={showOnlyInStock}
-              onChange={(e) => setShowOnlyInStock(e.target.checked)}
+              onChange={(e) => {
+                setShowOnlyInStock(e.target.checked);
+                setCurrentPage(1); // Reset to first page when filter changes
+              }}
               className="w-4 h-4 text-gray-900 border-gray-300 rounded focus:ring-gray-500"
             />
             <span className="text-sm text-gray-700">In stock only</span>
@@ -81,7 +102,7 @@ export default function ProductGrid() {
 
         {/* Products Grid */}
         <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {filteredProducts.map((product) => (
+          {filteredProducts.map((product: Product) => (
             <div
               key={product._id}
               className="group bg-white rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden border border-gray-100"
@@ -121,8 +142,12 @@ export default function ProductGrid() {
                 </div>
 
                 <button
-                  className="w-full mt-4 bg-gray-900 text-white py-3 px-4 rounded-lg hover:bg-gray-800 transition-colors duration-200 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full mt-4 bg-gray-900 text-white py-3 px-4 rounded-lg hover:bg-gray-800 transition-colors duration-200 font-medium disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
                   disabled={product.stockAmount === 0}
+                  onClick={() => {
+                    addItem(product);
+                    toast.success(`${product.name} added to cart!`);
+                  }}
                 >
                   {product.stockAmount > 0 ? "Add to Cart" : "Out of Stock"}
                 </button>
@@ -131,7 +156,7 @@ export default function ProductGrid() {
           ))}
         </div>
 
-        {filteredProducts.length === 0 && (
+        {totalProducts === 0 && (
           <div className="text-center py-16">
             <div className="text-gray-400 text-6xl mb-4">🔍</div>
             <h3 className="text-xl font-semibold text-gray-900 mb-2">
@@ -140,6 +165,43 @@ export default function ProductGrid() {
             <p className="text-gray-600">
               Try adjusting your filters or check back later.
             </p>
+          </div>
+        )}
+
+        {/* Pagination Controls */}
+        {totalPages > 1 && (
+          <div className="mt-12 flex justify-center items-center gap-4">
+            <button
+              onClick={() => paginate(currentPage - 1)}
+              disabled={currentPage === 1}
+              className="px-4 py-2 border rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50"
+            >
+              Previous
+            </button>
+            <div className="flex gap-2">
+              {Array.from({ length: totalPages }, (_, i) => i + 1).map(
+                (page: number) => (
+                  <button
+                    key={page}
+                    onClick={() => paginate(page)}
+                    className={`px-4 py-2 rounded-lg text-sm font-medium ${
+                      currentPage === page
+                        ? "bg-gray-900 text-white"
+                        : "bg-white text-gray-700 border hover:bg-gray-50"
+                    }`}
+                  >
+                    {page}
+                  </button>
+                )
+              )}
+            </div>
+            <button
+              onClick={() => paginate(currentPage + 1)}
+              disabled={currentPage === totalPages}
+              className="px-4 py-2 border rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50"
+            >
+              Next
+            </button>
           </div>
         )}
       </div>

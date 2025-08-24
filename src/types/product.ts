@@ -1,3 +1,4 @@
+// Updated type definitions to be placed in your src/types/product.ts file
 export interface Product {
   _id: string;
   name: string;
@@ -5,15 +6,18 @@ export interface Product {
   images: string[];
   basePrice: number;
   taxRate: number;
-  status: 'draft' | 'published';
+  status: "published" | "draft";
   stockAmount: number;
-  createdBy: string;
+  createdBy: {
+    _id: string;
+    email: string;
+    firstName: string;
+    lastName: string;
+  };
   isDeleted: boolean;
-  deletedAt?: string;
-  createdAt: string;
-  updatedAt: string;
-  finalPrice: number;
-  isInStock: boolean;
+  createdAt: string; 
+  updatedAt: string; 
+  __v: number;
 }
 
 export interface CreateProductInput {
@@ -22,7 +26,7 @@ export interface CreateProductInput {
   images?: string[];
   basePrice: number;
   taxRate?: number;
-  status?: 'draft' | 'published';
+  status?: "draft" | "published";
   stockAmount?: number;
   createdBy: string;
 }
@@ -33,13 +37,13 @@ export interface UpdateProductInput {
   images?: string[];
   basePrice?: number;
   taxRate?: number;
-  status?: 'draft' | 'published';
+  status?: "draft" | "published";
   stockAmount?: number;
 }
 
 export interface ProductSearchParams {
   name?: string;
-  status?: 'draft' | 'published';
+  status?: "draft" | "published";
   minPrice?: number;
   maxPrice?: number;
   createdBy?: string;
@@ -55,7 +59,7 @@ export interface BulkStockUpdate {
 }
 
 export interface ProductsResponse {
-  products: Product[];
+  data: Product[];
   pagination: {
     page: number;
     limit: number;
@@ -64,8 +68,15 @@ export interface ProductsResponse {
   };
 }
 
-export interface ApiResponse<T> {
-  success: boolean;
+// Renamed for clarity to show it's a success response
+export interface ApiSuccessResponse<T> {
+  success: true;
   message: string;
   data: T;
+}
+
+export interface ApiErrorResponse {
+  success: false;
+  message: string;
+  error?: string;
 }

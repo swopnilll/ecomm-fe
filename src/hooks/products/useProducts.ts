@@ -6,7 +6,18 @@ import {
   type UseMutationOptions,
 } from "@tanstack/react-query";
 import { toast } from "react-hot-toast";
-import { productsApi } from "../../services/api/products";
+import {
+  createProduct,
+  deleteProduct,
+  getAllProducts,
+  getProduct,
+  getPublishedProduct,
+  getPublishedProducts,
+  publishProduct,
+  searchProducts,
+  unpublishProduct,
+  updateProduct,
+} from "../../services/api/products";
 import type {
   Product,
   CreateProductInput,
@@ -21,12 +32,12 @@ export const productKeys = {
   all: ["products"] as const,
   lists: () => [...productKeys.all, "list"] as const,
   list: (filters: ProductSearchParams) =>
-    [...productKeys.lists(), { filters }] as const,
+    [...productKeys.lists(), { ...filters }] as const,
   details: () => [...productKeys.all, "detail"] as const,
   detail: (id: string) => [...productKeys.details(), id] as const,
   published: () => [...productKeys.all, "published"] as const,
   publishedList: (filters: ProductSearchParams) =>
-    [...productKeys.published(), { filters }] as const,
+    [...productKeys.published(), { ...filters }] as const,
   publishedDetail: (id: string) => [...productKeys.published(), id] as const,
   search: (term: string) => [...productKeys.all, "search", term] as const,
   lowStock: (threshold: number) =>
@@ -46,9 +57,9 @@ export function usePublishedProducts(
   params?: ProductSearchParams,
   options?: Partial<UseQueryOptions<ProductsResponse>>
 ) {
-  return useQuery({
+  return useQuery<ProductsResponse>({
     queryKey: productKeys.publishedList(params || {}),
-    queryFn: () => productsApi.getPublishedProducts(params),
+    queryFn: () => getPublishedProducts(params),
     staleTime: 5 * 60 * 1000, // 5 minutes
     ...options,
   });
@@ -63,7 +74,7 @@ export function usePublishedProduct(
 ) {
   return useQuery({
     queryKey: productKeys.publishedDetail(id),
-    queryFn: () => productsApi.getPublishedProduct(id),
+    queryFn: () => getPublishedProduct(id),
     enabled: !!id,
     staleTime: 5 * 60 * 1000, // 5 minutes
     ...options,
@@ -79,7 +90,7 @@ export function useAllProducts(
 ) {
   return useQuery({
     queryKey: productKeys.list(params || {}),
-    queryFn: () => productsApi.getAllProducts(params),
+    queryFn: () => getAllProducts(params),
     staleTime: 2 * 60 * 1000, // 2 minutes
     ...options,
   });
@@ -94,7 +105,7 @@ export function useProduct(
 ) {
   return useQuery({
     queryKey: productKeys.detail(id),
-    queryFn: () => productsApi.getProduct(id),
+    queryFn: () => getProduct(id),
     enabled: !!id,
     staleTime: 2 * 60 * 1000, // 2 minutes
     ...options,
@@ -111,68 +122,12 @@ export function useProductSearch(
 ) {
   return useQuery({
     queryKey: productKeys.search(searchTerm + includeUnpublished),
-    queryFn: () => productsApi.searchProducts(searchTerm, includeUnpublished),
+    queryFn: () => searchProducts(searchTerm, includeUnpublished),
     enabled: searchTerm.length >= 2, // Only search with 2+ characters
     staleTime: 1 * 60 * 1000, // 1 minute
     ...options,
   });
 }
-
-/**
- * Get low stock products
- */
-export function useLowStockProducts(
-  threshold: number = 5,
-  options?: Partial<UseQueryOptions<Product[]>>
-) {
-  return useQuery({
-    queryKey: productKeys.lowStock(threshold),
-    queryFn: () => productsApi.getLowStockProducts(threshold),
-    staleTime: 1 * 60 * 1000, // 1 minute
-    ...options,
-  });
-}
-
-/**
- * Get products by price range
- */
-export function useProductsByPriceRange(
-  minPrice: number,
-  maxPrice: number,
-  includeUnpublished: boolean = false,
-  options?: Partial<UseQueryOptions<Product[]>>
-) {
-  return useQuery({
-    queryKey: productKeys.priceRange(minPrice, maxPrice),
-    queryFn: () =>
-      productsApi.getProductsByPriceRange(
-        minPrice,
-        maxPrice,
-        includeUnpublished
-      ),
-    enabled: minPrice >= 0 && maxPrice >= minPrice,
-    staleTime: 2 * 60 * 1000, // 2 minutes
-    ...options,
-  });
-}
-
-/**
- * Get products by creator
- */
-export function useProductsByCreator(
-  creatorId: string,
-  options?: Partial<UseQueryOptions<Product[]>>
-) {
-  return useQuery({
-    queryKey: productKeys.byCreator(creatorId),
-    queryFn: () => productsApi.getProductsByCreator(creatorId),
-    enabled: !!creatorId,
-    staleTime: 2 * 60 * 1000, // 2 minutes
-    ...options,
-  });
-}
-
-// Custom Hooks for Mutations
 
 /**
  * Create a new product
@@ -183,7 +138,7 @@ export function useCreateProduct(
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: productsApi.createProduct,
+    mutationFn: createProduct,
     onSuccess: (data) => {
       // Invalidate and refetch product lists
       queryClient.invalidateQueries({ queryKey: productKeys.lists() });
@@ -214,7 +169,7 @@ export function useUpdateProduct(
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ id, data }) => productsApi.updateProduct(id, data),
+    mutationFn: ({ id, data }) => updateProduct(id, data),
     onSuccess: (data, { id }) => {
       // Update the specific product in cache
       queryClient.setQueryData(productKeys.detail(id), data);
@@ -241,7 +196,7 @@ export function useDeleteProduct(
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: productsApi.deleteProduct,
+    mutationFn: deleteProduct,
     onSuccess: (_, productId) => {
       // Remove the product from cache
       queryClient.removeQueries({ queryKey: productKeys.detail(productId) });
@@ -268,7 +223,7 @@ export function usePublishProduct(
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: productsApi.publishProduct,
+    mutationFn: publishProduct,
     onSuccess: (data, productId) => {
       // Update the product in cache
       queryClient.setQueryData(productKeys.detail(productId), data);
@@ -295,7 +250,7 @@ export function useUnpublishProduct(
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: productsApi.unpublishProduct,
+    mutationFn: unpublishProduct,
     onSuccess: (data, productId) => {
       // Update the product in cache
       queryClient.setQueryData(productKeys.detail(productId), data);
@@ -329,115 +284,4 @@ export function useToggleProductStatus() {
     toggleStatus,
     isLoading: publishMutation.isPending || unpublishMutation.isPending,
   };
-}
-
-/**
- * Update product stock
- */
-export function useUpdateProductStock(
-  options?: UseMutationOptions<
-    Product,
-    Error,
-    { id: string; stockAmount: number }
-  >
-) {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: ({ id, stockAmount }) =>
-      productsApi.updateProductStock(id, stockAmount),
-    onSuccess: (data, { id }) => {
-      // Update the product in cache
-      queryClient.setQueryData(productKeys.detail(id), data);
-
-      // Invalidate lists to reflect stock changes
-      queryClient.invalidateQueries({ queryKey: productKeys.lists() });
-      queryClient.invalidateQueries({ queryKey: productKeys.published() });
-      queryClient.invalidateQueries({ queryKey: productKeys.lowStock(5) });
-
-      toast.success("Stock updated successfully!");
-    },
-    onError: (error) => {
-      toast.error("Failed to update stock: " + error.message);
-    },
-    ...options,
-  });
-}
-
-/**
- * Bulk update stock for multiple products
- */
-export function useBulkUpdateStock(
-  options?: UseMutationOptions<void, Error, BulkStockUpdate[]>
-) {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: productsApi.bulkUpdateStock,
-    onSuccess: () => {
-      // Invalidate all product-related queries
-      queryClient.invalidateQueries({ queryKey: productKeys.all });
-
-      toast.success("Stock updated for all products successfully!");
-    },
-    onError: (error) => {
-      toast.error("Failed to update stock: " + error.message);
-    },
-    ...options,
-  });
-}
-
-/**
- * Add image to product
- */
-export function useAddProductImage(
-  options?: UseMutationOptions<Product, Error, { id: string; imageUrl: string }>
-) {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: ({ id, imageUrl }) => productsApi.addProductImage(id, imageUrl),
-    onSuccess: (data, { id }) => {
-      // Update the product in cache
-      queryClient.setQueryData(productKeys.detail(id), data);
-
-      // Invalidate lists to reflect image changes
-      queryClient.invalidateQueries({ queryKey: productKeys.lists() });
-      queryClient.invalidateQueries({ queryKey: productKeys.published() });
-
-      toast.success("Image added successfully!");
-    },
-    onError: (error) => {
-      toast.error("Failed to add image: " + error.message);
-    },
-    ...options,
-  });
-}
-
-/**
- * Remove image from product
- */
-export function useRemoveProductImage(
-  options?: UseMutationOptions<Product, Error, { id: string; imageUrl: string }>
-) {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: ({ id, imageUrl }) =>
-      productsApi.removeProductImage(id, imageUrl),
-    onSuccess: (data, { id }) => {
-      // Update the product in cache
-      queryClient.setQueryData(productKeys.detail(id), data);
-
-      // Invalidate lists to reflect image changes
-      queryClient.invalidateQueries({ queryKey: productKeys.lists() });
-      queryClient.invalidateQueries({ queryKey: productKeys.published() });
-
-      toast.success("Image removed successfully!");
-    },
-    onError: (error) => {
-      toast.error("Failed to remove image: " + error.message);
-    },
-    ...options,
-  });
 }
