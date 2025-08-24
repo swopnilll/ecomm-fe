@@ -1,17 +1,56 @@
 import { Route, Routes } from "react-router-dom";
+
 import Home from "../pages/home/Home";
+import Login from "../pages/auth/Login";
 import About from "../pages/about/About";
-import NotFound from "../pages/notFound/NotFound";
+import Register from "../pages/auth/Register";
 import Layout from "../components/layout/Layout";
-
-
+import NotFound from "../pages/notFound/NotFound";
+import ProtectedRoute from "./ProtectedRoute";
 
 const AppRouter = () => {
   return (
     <Routes>
       <Route path="/" element={<Layout />}>
-        <Route index element={<Home />} />
-        <Route path="about" element={<About />} />
+        {/* Public routes - redirect to home if already authenticated */}
+        <Route
+          path="login"
+          element={
+            <ProtectedRoute requireAuth={false}>
+              <Login />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="register"
+          element={
+            <ProtectedRoute requireAuth={false}>
+              <Register />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          index
+          element={
+            <ProtectedRoute requireAuth={false}>
+              <Home />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Protected routes - require authentication */}
+
+        <Route
+          path="about"
+          element={
+            <ProtectedRoute>
+              <About />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* 404 page - public */}
         <Route path="*" element={<NotFound />} />
       </Route>
     </Routes>
