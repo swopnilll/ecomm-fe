@@ -7,14 +7,16 @@ interface ProtectedRouteProps {
   children: ReactNode;
   redirectTo?: string;
   requireAuth?: boolean;
+  requiredRole?: "admin" | "employee" | "customer";
 }
 
 const ProtectedRoute = ({
   children,
   redirectTo = "/login",
   requireAuth = true,
+  requiredRole,
 }: ProtectedRouteProps) => {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { isAuthenticated, isLoading, user } = useAuth();
   const location = useLocation();
 
   // Show loading spinner while checking authentication
@@ -37,6 +39,12 @@ const ProtectedRoute = ({
     // Get the intended destination from state, or default to home
     const from = location.state?.from?.pathname || "/";
     return <Navigate to={from} replace />;
+  }
+
+  // If specific role is required, check user role
+  if (requireAuth && requiredRole && user?.role !== requiredRole) {
+    // Redirect to home or unauthorized page if user doesn't have required role
+    return <Navigate to="/" replace />;
   }
 
   return <>{children}</>;

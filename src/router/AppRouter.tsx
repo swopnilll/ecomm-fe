@@ -7,6 +7,7 @@ import Register from "../pages/auth/Register";
 import Layout from "../components/layout/Layout";
 import NotFound from "../pages/notFound/NotFound";
 import ProtectedRoute from "./ProtectedRoute";
+import AdminRegister from "../pages/admin/AdminRegister";
 
 const AppRouter = () => {
   return (
@@ -26,6 +27,15 @@ const AppRouter = () => {
           element={
             <ProtectedRoute requireAuth={false}>
               <Register />
+            </ProtectedRoute>
+          }
+        />
+        
+        <Route
+          path="admin/register"
+          element={
+            <ProtectedRoute requireAuth={true} requiredRole="admin">
+              <AdminRegister />
             </ProtectedRoute>
           }
         />

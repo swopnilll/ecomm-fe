@@ -1,18 +1,11 @@
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../hooks/auth/useAuth";
 import { useState } from "react";
 import { registerSchema, type RegisterFormData } from "../../schemas/auth";
 
-const Register: React.FC = () => {
+const AdminRegister: React.FC = () => {
   const navigate = useNavigate();
-  const location = useLocation();
-  const { register, isRegistering, registerError, user } = useAuth();
-
-  // Check if current user is admin
-  const isAdmin = user?.role === "admin";
-
-  // Get the page user was trying to access before being redirected to register
-  const from = location.state?.from?.pathname || "/";
+  const { register, isRegistering, registerError } = useAuth();
 
   const [formData, setFormData] = useState<RegisterFormData>({
     firstName: "",
@@ -69,8 +62,23 @@ const Register: React.FC = () => {
     try {
       await register(formData);
 
-      // Redirect to the page user was trying to access, or home
-      navigate(from, { replace: true });
+      // Show success message and redirect to admin dashboard or users list
+      alert(
+        `User ${formData.firstName} ${formData.lastName} registered successfully!`
+      );
+
+      // Reset form for next registration
+      setFormData({
+        firstName: "",
+        lastName: "",
+        email: "",
+        password: "",
+        confirmPassword: "",
+        role: "employee",
+      });
+
+      // Or navigate to users management page
+      // navigate("/admin/users");
     } catch (error: any) {
       console.error("Registration failed:", error);
       // Error is handled by the useAuth hook
@@ -86,44 +94,46 @@ const Register: React.FC = () => {
           className="mx-auto h-10 w-auto"
         />
         <h2 className="mt-10 text-center text-2xl/9 font-bold tracking-tight text-gray-900">
-          Create your account
+          Register New User
         </h2>
+        <p className="mt-2 text-center text-sm text-gray-600">
+          Create a new employee or customer account
+        </p>
       </div>
 
       <div className="mt-10 sm:mx-auto sm:w-full sm:max-w-sm">
         <form className="space-y-6" onSubmit={handleSubmit} noValidate>
-          <div className="grid grid-cols-2 gap-4">
-            {isAdmin && (
-              <div>
-                <label
-                  htmlFor="role"
-                  className="block text-sm/6 font-medium text-gray-900"
-                >
-                  User Role
-                </label>
-                <div className="mt-2">
-                  <select
-                    id="role"
-                    name="role"
-                    required
-                    value={formData.role}
-                    onChange={handleInputChange}
-                    className={`block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6 ${
-                      validationErrors.role ? "border-red-500" : ""
-                    }`}
-                  >
-                    <option value="employee">Employee</option>
-                    <option value="customer">Customer</option>
-                  </select>
-                  {validationErrors.role && (
-                    <p className="mt-2 text-sm text-red-600">
-                      {validationErrors.role}
-                    </p>
-                  )}
-                </div>
-              </div>
-            )}
+          {/* Role Selection - Always visible for admin */}
+          <div>
+            <label
+              htmlFor="role"
+              className="block text-sm/6 font-medium text-gray-900"
+            >
+              User Role
+            </label>
+            <div className="mt-2">
+              <select
+                id="role"
+                name="role"
+                required
+                value={formData.role}
+                onChange={handleInputChange}
+                className={`block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6 ${
+                  validationErrors.role ? "border-red-500" : ""
+                }`}
+              >
+                <option value="employee">Employee</option>
+                <option value="customer">Customer</option>
+              </select>
+              {validationErrors.role && (
+                <p className="mt-2 text-sm text-red-600">
+                  {validationErrors.role}
+                </p>
+              )}
+            </div>
+          </div>
 
+          <div className="grid grid-cols-2 gap-4">
             <div>
               <label
                 htmlFor="firstName"
@@ -281,44 +291,34 @@ const Register: React.FC = () => {
             </div>
           </div>
 
-          <div>
+          <div className="flex gap-4">
             <button
               type="submit"
               disabled={isRegistering}
-              className="flex w-full justify-center rounded-md bg-indigo-600 px-3 py-1.5 text-sm/6 font-semibold text-white shadow-xs hover:bg-indigo-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex-1 flex justify-center rounded-md bg-indigo-600 px-3 py-1.5 text-sm/6 font-semibold text-white shadow-xs hover:bg-indigo-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {isRegistering
-                ? isAdmin
-                  ? "Creating user..."
-                  : "Creating account..."
-                : isAdmin
-                ? "Create User"
-                : "Create account"}
+              {isRegistering ? "Creating user..." : "Create User"}
             </button>
-            {registerError && (
-              <p className="mt-2 text-sm text-red-600">
-                {(registerError as any)?.message ||
-                  "Registration failed. Please try again."}
-              </p>
-            )}
-          </div>
-        </form>
 
-        <p className="mt-10 text-center text-sm/6 text-gray-500">
-          Already have an account?{" "}
-          <button
-            type="button"
-            onClick={() =>
-              navigate("/login", { state: { from: location.state?.from } })
-            }
-            className="font-semibold text-indigo-600 hover:text-indigo-500 underline"
-          >
-            Sign in to your account
-          </button>
-        </p>
+            <button
+              type="button"
+              onClick={() => navigate(-1)}
+              className="flex-1 flex justify-center rounded-md bg-white px-3 py-1.5 text-sm/6 font-semibold text-gray-900 shadow-xs ring-1 ring-inset ring-gray-300 hover:bg-gray-50"
+            >
+              Cancel
+            </button>
+          </div>
+
+          {registerError && (
+            <p className="mt-2 text-sm text-red-600 text-center">
+              {(registerError as any)?.message ||
+                "Registration failed. Please try again."}
+            </p>
+          )}
+        </form>
       </div>
     </div>
   );
 };
 
-export default Register;
+export default AdminRegister;

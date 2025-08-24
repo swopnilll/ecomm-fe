@@ -9,6 +9,7 @@ const Header = () => {
   const { isAuthenticated, isLoading, user, logout } = useAuth();
 
   const isActive = (path: string) => location.pathname === path;
+  const isAdmin = user?.role === "admin";
 
   const handleLogout = async () => {
     try {
@@ -48,6 +49,20 @@ const Header = () => {
                 }`}
               >
                 About
+              </Link>
+            )}
+
+            {/* Admin-specific navigation */}
+            {isAuthenticated && isAdmin && (
+              <Link
+                to="/admin/register"
+                className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                  isActive("/admin/register")
+                    ? "text-blue-600 bg-blue-50"
+                    : "text-gray-700 hover:text-blue-600 hover:bg-gray-50"
+                }`}
+              >
+                Register User
               </Link>
             )}
 
@@ -101,6 +116,29 @@ const Header = () => {
                         Account settings
                       </Link>
                     </MenuItem>
+
+                    {/* Admin-only menu items */}
+                    {isAdmin && (
+                      <>
+                        <MenuItem>
+                          <Link
+                            to="/admin/register"
+                            className="block px-4 py-2 text-sm text-gray-700 data-focus:bg-gray-100 data-focus:text-gray-900 data-focus:outline-hidden"
+                          >
+                            Register User
+                          </Link>
+                        </MenuItem>
+                        <MenuItem>
+                          <Link
+                            to="/admin/users"
+                            className="block px-4 py-2 text-sm text-gray-700 data-focus:bg-gray-100 data-focus:text-gray-900 data-focus:outline-hidden"
+                          >
+                            Manage Users
+                          </Link>
+                        </MenuItem>
+                      </>
+                    )}
+
                     <MenuItem>
                       <Link
                         to="/support"
