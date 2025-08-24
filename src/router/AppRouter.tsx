@@ -11,6 +11,7 @@ import AdminRegister from "../pages/admin/AdminRegister";
 import UserManagement from "../pages/admin/UserManagement";
 import ProductAdditionPage from "../pages/products/ProductAdditionPage";
 import ProductManagement from "../pages/products/ProductManagement";
+import CheckoutPage from "../pages/checkout/CheckOutPage";
 
 const AppRouter = () => {
   return (
@@ -79,6 +80,15 @@ const AppRouter = () => {
           element={
             <ProtectedRoute requireAuth={true} requiredRole="employee">
               <ProductManagement />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="checkout"
+          element={
+            <ProtectedRoute requireAuth={true}>
+              <CheckoutPage />
             </ProtectedRoute>
           }
         />
