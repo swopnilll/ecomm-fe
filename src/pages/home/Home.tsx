@@ -1,7 +1,9 @@
-const Home = () => {
-  return (
-    <div>Home</div>
-  )
-}
+import ProductGrid from "../products/ProductGrid";
 
-export default Home
+const Home = () => {
+  console.log("Home component is rendering");
+
+  return <ProductGrid />;
+};
+
+export default Home;

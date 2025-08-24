@@ -16,6 +16,7 @@ const Header = () => {
 
   const isActive = (path: string) => location.pathname === path;
   const isAdmin = user?.role === "admin";
+  const isEmployee = user?.role === "employee";
 
   const handleLogout = async () => {
     try {
@@ -97,6 +98,32 @@ const Header = () => {
             }`}
           >
             Register
+          </Link>
+        </>
+      )}
+
+      {isAuthenticated && isEmployee && (
+        <>
+          <Link
+            to="/products/add"
+            className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+              isActive("/products/add")
+                ? "text-blue-600 bg-blue-50"
+                : "text-gray-700 hover:text-blue-600 hover:bg-gray-50"
+            }`}
+          >
+            Add Product
+          </Link>
+
+          <Link
+            to="/products/manage"
+            className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+              isActive("/products/manage")
+                ? "text-blue-600 bg-blue-50"
+                : "text-gray-700 hover:text-blue-600 hover:bg-gray-50"
+            }`}
+          >
+            Manage Products
           </Link>
         </>
       )}

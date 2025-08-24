@@ -9,6 +9,8 @@ import NotFound from "../pages/notFound/NotFound";
 import ProtectedRoute from "./ProtectedRoute";
 import AdminRegister from "../pages/admin/AdminRegister";
 import UserManagement from "../pages/admin/UserManagement";
+import ProductAdditionPage from "../pages/products/ProductAdditionPage";
+import ProductManagement from "../pages/products/ProductManagement";
 
 const AppRouter = () => {
   return (
@@ -31,7 +33,7 @@ const AppRouter = () => {
             </ProtectedRoute>
           }
         />
-        
+
         <Route
           path="admin/register"
           element={
@@ -50,14 +52,7 @@ const AppRouter = () => {
           }
         />
 
-        <Route
-          index
-          element={
-            <ProtectedRoute requireAuth={false}>
-              <Home />
-            </ProtectedRoute>
-          }
-        />
+        <Route index element={<Home />} />
 
         {/* Protected routes - require authentication */}
 
@@ -66,6 +61,24 @@ const AppRouter = () => {
           element={
             <ProtectedRoute>
               <About />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="products/add"
+          element={
+            <ProtectedRoute requireAuth={true} requiredRole="employee">
+              <ProductAdditionPage />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="products/manage"
+          element={
+            <ProtectedRoute requireAuth={true} requiredRole="employee">
+              <ProductManagement />
             </ProtectedRoute>
           }
         />
