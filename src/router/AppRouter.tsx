@@ -8,6 +8,7 @@ import Layout from "../components/layout/Layout";
 import NotFound from "../pages/notFound/NotFound";
 import ProtectedRoute from "./ProtectedRoute";
 import AdminRegister from "../pages/admin/AdminRegister";
+import UserManagement from "../pages/admin/UserManagement";
 
 const AppRouter = () => {
   return (
@@ -36,6 +37,15 @@ const AppRouter = () => {
           element={
             <ProtectedRoute requireAuth={true} requiredRole="admin">
               <AdminRegister />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="admin/users"
+          element={
+            <ProtectedRoute requireAuth={true} requiredRole="admin">
+              <UserManagement />
             </ProtectedRoute>
           }
         />

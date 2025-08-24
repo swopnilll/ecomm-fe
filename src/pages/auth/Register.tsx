@@ -20,7 +20,7 @@ const Register: React.FC = () => {
     email: "",
     password: "",
     confirmPassword: "",
-    role: "employee", // Default to employee role
+    role: "customer", // Default to customer role
   });
 
   const [showPassword, setShowPassword] = useState(false);

@@ -17,11 +17,18 @@ export const usersApi = {
   getUsers: async (
     params: UsersListParams = {}
   ): Promise<UsersListResponse> => {
-    const response = await apiClient.get<UsersListResponse>(
-      API_ENDPOINTS.USERS.BASE,
-      { params }
-    );
-    return response.data;
+    const response = await apiClient.get<{
+      success: boolean;
+      data: UserProfile[];
+      pagination: UsersListResponse["pagination"];
+    }>(API_ENDPOINTS.USERS.BASE, { params });
+
+    const { data, pagination } = response.data;
+
+    return {
+      users: data,
+      pagination,
+    };
   },
 
   // Get user by ID (Admin only)

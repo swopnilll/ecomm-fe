@@ -26,9 +26,14 @@ export interface ChangePasswordRequest {
 
 export interface UsersListResponse {
   users: UserProfile[];
-  total: number;
-  page: number;
-  limit: number;
+  pagination: {
+    page: number;
+    limit: number;
+    totalCount: number;
+    totalPages: number;
+    hasNext: boolean;
+    hasPrev: boolean;
+  };
 }
 
 export interface UsersListParams {
