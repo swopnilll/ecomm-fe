@@ -8,6 +8,7 @@ import { XMarkIcon } from "@heroicons/react/24/outline";
 import { useCart } from "../../hooks/cart/useCart";
 import type { CartItem } from "../../types/cart";
 import { useNavigate } from "react-router-dom";
+import { useCartStore } from "../../stores/cartStore";
 
 interface CartModalProps {
   open: boolean;
@@ -15,7 +16,7 @@ interface CartModalProps {
 }
 
 export default function CartModal({ open, onClose }: CartModalProps) {
-  const { cart, removeItem } = useCart();
+  const { cart, removeItem } = useCartStore();
   const navigate = useNavigate();
 
   console.log("Cart contents:", cart);

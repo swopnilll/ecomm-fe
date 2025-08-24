@@ -8,14 +8,18 @@ import {
 import { ROUTES } from "../../router/routes";
 import { useAuth } from "../../hooks/auth/useAuth";
 import { useState } from "react";
-import CartIcon from "../cart/CartIcon"; // Import CartIcon
-import CartModal from "../cart/CartModal"; // Import CartModal
+import CartIcon from "../cart/CartIcon";
+import CartModal from "../cart/CartModal";
+import { useCartStore } from "../../stores/cartStore";
 
 const Header = () => {
   const location = useLocation();
   const { isAuthenticated, isLoading, user, logout } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [isCartOpen, setIsCartOpen] = useState(false); // New state for cart modal
+  const [isCartOpen, setIsCartOpen] = useState(false);
+
+  // Connect to the Zustand store to get the cart state
+  const { cart } = useCartStore();
 
   const isActive = (path: string) => location.pathname === path;
   const isAdmin = user?.role === "admin";
@@ -146,8 +150,11 @@ const Header = () => {
             {/* Desktop Nav and Cart Icon */}
             <nav className="hidden md:flex items-center space-x-6">
               <NavLinks />
-              {/* Add CartIcon here */}
-              <CartIcon onClick={() => setIsCartOpen(true)} />
+              {/* Pass the item count to CartIcon */}
+              <CartIcon
+                onClick={() => setIsCartOpen(true)}
+                itemCount={cart.itemCount}
+              />
 
               {/* User dropdown */}
               {isAuthenticated && !isLoading && (
@@ -221,7 +228,11 @@ const Header = () => {
 
             {/* Mobile button and Cart Icon */}
             <div className="md:hidden flex items-center">
-              <CartIcon onClick={() => setIsCartOpen(true)} />
+              {/* Pass the item count to CartIcon */}
+              <CartIcon
+                onClick={() => setIsCartOpen(true)}
+                itemCount={cart.itemCount}
+              />
               <button
                 onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
                 className="p-2 rounded-md hover:bg-gray-100"

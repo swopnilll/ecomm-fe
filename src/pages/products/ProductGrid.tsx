@@ -1,23 +1,21 @@
 import { useState } from "react";
 import toast from "react-hot-toast";
 
-import type { Product, ProductsResponse } from "../../types/product";
-import { useCart } from "../../hooks/cart/useCart";
+import type { Product } from "../../types/product";
+import { useCartStore } from "../../stores/cartStore";
 import { usePublishedProducts } from "../../hooks/products/useProducts";
 
 export default function ProductGrid() {
   const [showOnlyInStock, setShowOnlyInStock] = useState<boolean>(false);
   const [currentPage, setCurrentPage] = useState<number>(1);
-  const productsPerPage = 10; // Corresponds to the backend limit
+  const productsPerPage = 10;
 
   const { data, isLoading, error } = usePublishedProducts({
     page: currentPage,
     limit: productsPerPage,
   });
 
-  console.log({data})
-
-  const { addItem } = useCart();
+  const { addItem } = useCartStore();
 
   // Use optional chaining with a default value to prevent errors
   const products: Product[] = data?.data || [];
