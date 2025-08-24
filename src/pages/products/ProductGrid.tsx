@@ -1,12 +1,12 @@
 import { useState } from "react";
 import toast from "react-hot-toast";
 
-import type { Product } from "../../types/product";
-import { useCartStore } from "../../stores/cartStore";
 import {
   usePublishedProducts,
   useProductSearch,
 } from "../../hooks/products/useProducts";
+import type { Product } from "../../types/product";
+import { useCartStore } from "../../stores/cartStore";
 import { useDebounce } from "../../hooks/useDebounce";
 
 export default function ProductGrid() {
