@@ -145,15 +145,15 @@ export const unpublishProduct = async (id: string): Promise<Product> => {
 export const searchProducts = async (
   searchTerm: string,
   includeUnpublished: boolean = false
-): Promise<Product[]> => {
+): Promise<ProductsResponse> => {
   const endpoint = includeUnpublished
     ? `${PRODUCTS_BASE_URL}/search/all`
     : `${PRODUCTS_BASE_URL}/search`;
   try {
-    const response = await apiClient.get<ApiSuccessResponse<Product[]>>(
+    const response = await apiClient.get<ProductsResponse>(
       `${endpoint}?q=${encodeURIComponent(searchTerm)}`
     );
-    return response.data.data;
+    return response.data;
   } catch (error) {
     throw new Error("Failed to search products.");
   }

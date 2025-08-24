@@ -3,25 +3,33 @@ import toast from "react-hot-toast";
 
 import type { Product } from "../../types/product";
 import { useCartStore } from "../../stores/cartStore";
-import { usePublishedProducts } from "../../hooks/products/useProducts";
+import {
+  usePublishedProducts,
+  useProductSearch,
+} from "../../hooks/products/useProducts";
+import { useDebounce } from "../../hooks/useDebounce";
 
 export default function ProductGrid() {
   const [showOnlyInStock, setShowOnlyInStock] = useState<boolean>(false);
   const [currentPage, setCurrentPage] = useState<number>(1);
+  const [searchTerm, setSearchTerm] = useState<string>("");
   const productsPerPage = 10;
 
-  const { data, isLoading, error } = usePublishedProducts({
-    page: currentPage,
-    limit: productsPerPage,
-  });
+  const debouncedSearchTerm = useDebounce(searchTerm, 500);
+
+  // Conditionally use the search hook or the default products hook
+  const { data, isLoading, error } = debouncedSearchTerm
+    ? useProductSearch(debouncedSearchTerm, false)
+    : usePublishedProducts({
+        page: currentPage,
+        limit: productsPerPage,
+      });
 
   const { addItem } = useCartStore();
 
-  // Use optional chaining with a default value to prevent errors
   const products: Product[] = data?.data || [];
-
-  const totalPages: number = data?.pagination.totalPages || 1;
-  const totalProducts: number = data?.pagination.total || 0;
+  const totalPages: number = data?.pagination?.totalPages || 1;
+  const totalProducts: number = data?.pagination?.total || 0;
 
   const filteredProducts: Product[] = products.filter((product: Product) => {
     const stockMatch = !showOnlyInStock || product.stockAmount > 0;
@@ -38,6 +46,15 @@ export default function ProductGrid() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
+  // This function is for handling a change in the search input
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchTerm(e.target.value);
+    // When a search term is entered, reset filters and pagination
+    setShowOnlyInStock(false);
+    setCurrentPage(1);
+  };
+
+  // Conditional loading and error states for both hooks
   if (isLoading) {
     return (
       <div className="bg-gradient-to-br from-gray-50 to-white min-h-screen">
@@ -82,15 +99,38 @@ export default function ProductGrid() {
           </p>
         </div>
 
-        {/* Filters */}
-        <div className="mb-8 flex items-center justify-end">
+        {/* Search and Filters */}
+        <div className="mb-8 flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div className="relative w-full sm:max-w-xs">
+            <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+              <svg
+                className="w-5 h-5 text-gray-500"
+                fill="currentColor"
+                viewBox="0 0 20 20"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  fillRule="evenodd"
+                  d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z"
+                  clipRule="evenodd"
+                ></path>
+              </svg>
+            </div>
+            <input
+              type="text"
+              placeholder="Search products..."
+              value={searchTerm}
+              onChange={handleSearchChange}
+              className="block w-full rounded-lg border-gray-300 pl-10 pr-4 py-2 text-gray-900 placeholder-gray-500 focus:border-gray-500 focus:ring-gray-500 sm:text-sm"
+            />
+          </div>
           <label className="flex items-center gap-2 cursor-pointer">
             <input
               type="checkbox"
               checked={showOnlyInStock}
               onChange={(e) => {
                 setShowOnlyInStock(e.target.checked);
-                setCurrentPage(1); // Reset to first page when filter changes
+                setCurrentPage(1);
               }}
               className="w-4 h-4 text-gray-900 border-gray-300 rounded focus:ring-gray-500"
             />
@@ -161,13 +201,13 @@ export default function ProductGrid() {
               No products found
             </h3>
             <p className="text-gray-600">
-              Try adjusting your filters or check back later.
+              Try adjusting your filters or checking back later.
             </p>
           </div>
         )}
 
-        {/* Pagination Controls */}
-        {totalPages > 1 && (
+        {/* Pagination Controls - hide pagination during a search */}
+        {totalPages > 1 && !searchTerm && (
           <div className="mt-12 flex justify-center items-center gap-4">
             <button
               onClick={() => paginate(currentPage - 1)}

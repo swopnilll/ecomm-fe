@@ -118,7 +118,7 @@ export function useProduct(
 export function useProductSearch(
   searchTerm: string,
   includeUnpublished: boolean = false,
-  options?: Partial<UseQueryOptions<Product[]>>
+  options?: Partial<UseQueryOptions<ProductsResponse>>
 ) {
   return useQuery({
     queryKey: productKeys.search(searchTerm + includeUnpublished),
